@@ -72,7 +72,7 @@ def runner(x,y):
    xtr,xte = pca(xtr,xte,.95)
    return xtr,xte,ytr,yte
 
-def c(x1,x2,y1,y2):
+def classify(x1,x2,y1,y2):
     clf = mlp(hidden_layer_sizes=(13,13,13),solver='sgd',\
                        learning_rate_init=0.01,max_iter=500)
     clf.fit(x1,y1.values.ravel())
@@ -84,4 +84,4 @@ def c(x1,x2,y1,y2):
 df=pd.read_csv("usethis.csv")
 x = y = xtr = xte = ytr = yte = df.copy()
 xtr,xte,ytr,yte = runner(x,y)
-c(xtr,xte,ytr,yte)
+classify(xtr,xte,ytr,yte)
