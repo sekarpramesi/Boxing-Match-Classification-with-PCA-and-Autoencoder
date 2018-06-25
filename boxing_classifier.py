@@ -5,8 +5,9 @@ from sklearn.decomposition import PCA
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier as mlx
 from sklearn.metrics import classification_report,confusion_matrix
-from sklearn.preprocessing import MultiLabelBinarizer
-from sklearn.neural_network import MLPRegressor as mlp
+from sklearn.metrics import f1_score,accuracy_score
+from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import average_precision_score
 
 def init(df):
     #to_drop=['judge1_A', 'judge1_B', 'judge2_A', 'judge2_B', 'judge3_A','judge3_B']
@@ -29,8 +30,8 @@ def removeColumns(df,x):
     return df
 
 def normalize(x):
-    min_max_scaler=preprocessing.StandardScaler()
-    x_scaled=min_max_scaler.fit_transform(x)
+    scaler=preprocessing.StandardScaler()
+    x_scaled=scaler.fit_transform(x)
     return x_scaled
 
 def generate(df,name):
@@ -90,6 +91,24 @@ def classify(x1,x2,y1,y2):
     clf.fit(x1,y1)
     predictions = clf.predict(x2)
     cols=['draw','win_A','win_B','DQ','KO','MD','NWS','PTS','RTD','SD','TD','TKO','UD'];
+    #print(f1_score(y2,predictions,labels=cols,average='weighted'))
+    #print(accuracy_score(y2,predictions, normalize=False, sample_weight=None))
+    n_classes=y1.shape[1]
+    precision = dict()
+    recall = dict()
+    average_precision = dict()
+    for i in range(n_classes):
+        precision[i], recall[i], _ = precision_recall_curve(y2[:, i],
+                                                            predictions[:, i])
+        average_precision[i] = average_precision_score(y2[:, i], predictions[:, i])
+
+    # A "micro-average": quantifying score on all classes jointly
+    precision["micro"], recall["micro"], _ = precision_recall_curve(y2.ravel(),
+        predictions.ravel())
+    average_precision["micro"] = average_precision_score(y2, predictions,
+                                                         average="micro")
+    print('Average precision score, micro-averaged over all classes: {0:0.2f}'
+          .format(average_precision["micro"]))
     res = pd.DataFrame(predictions,columns=cols)
     return res
 
@@ -98,6 +117,6 @@ df=init(df)
 x = y = xtr = xte = ytr = yte = df.copy()
 xtr,xte,ytr,yte = runner(x)
 res = classify(xtr,xte,ytr,yte)
-print(res.loc[res['draw'] == 1])
-print(res.loc[res['win_A'] == 1])
-print(res.loc[res['win_B'] == 1])
+#print(res.loc[res['draw'] == 1].count)
+#print(res.loc[res['win_A'] == 1].count)
+#print(res.loc[res['win_B'] == 1].count)
